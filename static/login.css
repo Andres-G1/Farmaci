@@ -1,0 +1,112 @@
+
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+.screen {
+  display: flex;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+}
+
+/* PANEL IZQUIERDO */
+.left {
+  width: 50%;
+  background:
+    linear-gradient(135deg, rgba(219,48,48,0.9), rgba(248,113,113,0.8)),
+    url("https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=1200") center / cover no-repeat;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* PANEL DERECHO */
+.right {
+  width: 50%;
+  overflow: hidden;
+  position: relative;
+  background: #fff;
+}
+
+/* SLIDER */
+.slider {
+  width: 200%;
+  height: 100%;
+  display: flex;
+  transition: transform 0.6s ease;
+}
+
+.right.active .slider {
+  transform: translateX(-50%);
+}
+
+/* FORMULARIOS */
+.form {
+  width: 50%;
+  padding: 60px;
+  box-sizing: border-box;
+}
+
+/* LOADER */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,255,255,0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.spinner {
+  width: 64px;
+  height: 64px;
+  border: 6px solid #eee;
+  border-top: 6px solid #db3030;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.back-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;           /* 👉 ahora a la derecha */
+  z-index: 10;
+
+  background: transparent;
+  border: none;
+  color: #6c757d;       /* gris Bootstrap */
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.back-btn:hover {
+  background: rgba(0,0,0,0.05);
+  color: #db3030;       /* rojo farmacia */
+  text-decoration: none;
+}
+
+@media (max-width: 768px) {
+  .left { display: none; }
+  .right { width: 100%; }
+  .slider {
+    width: 100%;
+    transform: none !important;
+    flex-direction: column;
+  }
+  .form {
+    width: 100%;
+    padding: 30px;
+  }
+}

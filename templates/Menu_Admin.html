@@ -1,39 +1,86 @@
-<html>
-    <head>
-        <title>Menú de Admins</title>
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #f0f0f0;
-                margin: 0;
-                padding: 20px;
-            }
-            h1 {
-                color: #333;
-            }
-            ul {
-                list-style-type: none;
-                padding: 0;
-            }
-            li {
-                margin: 10px 0;
-            }
-            a {
-                text-decoration: none;
-                color: #007BFF;
-                font-size: 18px;
-            }
-            a:hover {
-                text-decoration: underline;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Menú de Administrador</h1>
-        <ul>
-            <li><a href="/profile">Perfil</a></li>
-            <li><a href="/settings">Configuración</a></li>
-            <li><a href="./index" method="POST" id="logout" name="logout">Cerrar sesión</a></li>
-        </ul>
-    </body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Farmacia | Admin</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body{margin:0;font-family:Arial;background:#f3f6fb}
+#loader{position:fixed;inset:0;background:white;z-index:9999;display:flex;flex-direction:column;justify-content:center;align-items:center}
+.top-bar{background:#111;height:55px;display:flex;align-items:center;justify-content:space-between;padding:0 15px;color:white}
+.hamburger{font-size:26px;cursor:pointer}
+.profile{width:36px;height:36px;border-radius:50%;overflow:hidden;border:2px solid white;cursor:pointer;background:white}
+.profile img{width:100%;height:100%;object-fit:cover}
+.side-menu{position:fixed;top:55px;left:-260px;width:260px;height:100%;background:#222;color:white;box-shadow:2px 0 8px rgba(0,0,0,.5);padding:15px;transition:.3s;z-index:1000}
+.side-menu.active{left:0}
+.side-menu a{display:block;padding:10px 0;text-decoration:none;color:white;font-weight:bold}
+.side-menu a:hover{color:#ff4d4d}
+.profile-menu{position:absolute;top:55px;right:15px;background:white;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);display:none;overflow:hidden;z-index:1000}
+.profile-menu a{display:block;padding:10px 20px;text-decoration:none;color:#333}
+.profile-menu a:hover{background:#f3f3f3}
+.admin-card{border:none;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1);transition:.2s}
+.admin-card:hover{transform:translateY(-5px)}
+footer{text-align:center;font-size:12px;color:#666;padding:20px}
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="spinner-border text-danger"></div>
+  <p class="mt-2">Cargando panel de administración...</p>
+</div>
+
+<div class="top-bar">
+  <span class="hamburger" onclick="toggleMenu()">☰</span>
+  <div class="profile" onclick="toggleProfile()">
+    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+  </div>
+</div>
+
+<div class="side-menu" id="sideMenu">
+  <h5>Admin</h5>
+  <a href="#">👥 Gestionar usuarios</a>
+  <a href="#">💊 Gestionar productos</a>
+  <a href="#">📦 Pedidos</a>
+  <a href="#">📊 Estadísticas</a>
+  <a href="/logout">🚪 Cerrar sesión</a>
+</div>
+
+<div class="profile-menu" id="profileMenu">
+  <a href="#">Mi cuenta</a>
+  <a href="/logout">Cerrar sesión</a>
+</div>
+
+<div class="container my-5">
+  <h2 class="text-center mb-4">Panel de Administración</h2>
+  <div class="row g-4">
+    <div class="col-md-3">
+      <div class="card admin-card p-3 text-center">👥<h6>Usuarios</h6></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card admin-card p-3 text-center">💊<h6>Productos</h6></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card admin-card p-3 text-center">📦<h6>Pedidos</h6></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card admin-card p-3 text-center">📊<h6>Reportes</h6></div>
+    </div>
+  </div>
+</div>
+
+<footer>© 2026 Farmacia Online — Admin</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function toggleMenu(){document.getElementById("sideMenu").classList.toggle("active")}
+function toggleProfile(){
+  const m=document.getElementById("profileMenu");
+  m.style.display=m.style.display==="block"?"none":"block";
+}
+window.onload=()=>{setTimeout(()=>{document.getElementById("loader").style.display="none"},800);}
+</script>
+
+</body>
 </html>

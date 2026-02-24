@@ -39,15 +39,15 @@ def register():
         confirm_password = request.form.get('confirm_password')
 
         if password != confirm_password:
-            return render_template('register.html', error="Las contraseñas no coinciden")
+            return render_template('login.html', error="Las contraseñas no coinciden")
 
         if name in user_info:
-            return render_template('register.html', error="El usuario ya existe")
+            return render_template('login.html', error="El usuario ya existe")
 
         user_info[name] = {'password': password, 'role': 'User'}
         return render_template('login.html', success="Usuario registrado exitosamente. Inicia sesión")
 
-    return render_template('register.html')
+    return render_template('login.html')
 
 
 @app.route('/products')
