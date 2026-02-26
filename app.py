@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 
 app = Flask(__name__)
-app.secret_key = "123"  # necesaria para usar session
+app.secret_key = "2122022025"  # necesaria para usar session
 
 user_info = {
     'Andres': {'password': '123', 'role': 'Admin'},
