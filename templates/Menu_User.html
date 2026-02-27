@@ -1,177 +1,215 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Farmacia | Usuario</title>
-<meta http-equiv="Cache-Control" content="no-store" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="{{ url_for('static', filename='menu.css') }}">
-</head>
+{% extends "base.html" %}
+{% block title %}Mi Panel — FarmaVida{% endblock %}
 
-<body>
+{% block extra_styles %}
+<style>
+/* Dashboard layout */
+.dashboard { display: flex; flex-direction: column; gap: 20px; }
+@media (min-width: 900px) { .dashboard { flex-direction: row; align-items: flex-start; } }
 
-<div id="loader">
-  <div class="spinner-border text-danger"></div>
-  <p class="mt-2">Cargando panel del usuario...</p>
+/* Sidebar */
+.sidebar { flex-shrink: 0; background: #fff; border-radius: var(--r-lg); box-shadow: var(--sh-card); padding: 20px; }
+@media (min-width: 900px) { .sidebar { width: 240px; position: sticky; top: 90px; } }
+
+.user-strip { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 2px solid var(--gray-100); margin-bottom: 12px; }
+@media (min-width: 900px) { .user-strip { flex-direction: column; text-align: center; padding-bottom: 20px; } }
+.avatar {
+  width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--teal-deep), var(--sage));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: #fff; font-weight: 800;
+}
+@media (min-width: 900px) { .avatar { width: 72px; height: 72px; font-size: 1.9rem; } }
+.user-name-text { font-weight: 800; font-size: .95rem; color: var(--gray-900); }
+.user-email { font-size: .76rem; color: var(--gray-500); }
+.premium-tag { background: var(--teal-light); color: var(--teal-deep); font-size: .74rem; font-weight: 800; padding: 4px 12px; border-radius: 99px; display: inline-block; margin-top: 4px; }
+
+/* Sidebar menu */
+.sidebar-menu { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.sidebar-menu::-webkit-scrollbar { display: none; }
+@media (min-width: 900px) { .sidebar-menu { flex-direction: column; overflow-x: visible; } }
+.menu-item {
+  display: flex; align-items: center; gap: 9px; padding: 10px 13px;
+  border-radius: var(--r-sm); font-weight: 700; font-size: .84rem; color: var(--gray-500);
+  cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all .2s; text-decoration: none;
+}
+.menu-item:hover  { background: var(--gray-100); color: var(--gray-700); }
+.menu-item.active { background: var(--teal-light); color: var(--teal-deep); }
+.menu-item.danger { color: var(--coral); }
+.menu-item.danger:hover { background: #FFE8E8; }
+
+/* Main content */
+.dash-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+
+/* Stat cards */
+.stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (min-width: 640px) { .stat-row { grid-template-columns: repeat(3, 1fr); } }
+.stat-card { background: #fff; border-radius: var(--r-md); padding: 18px; box-shadow: var(--sh-card); display: flex; align-items: center; gap: 12px; }
+.stat-icon { width: 48px; height: 48px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+.stat-num   { font-size: 1.6rem; font-weight: 800; color: var(--gray-900); line-height: 1; }
+.stat-label { font-size: .74rem; color: var(--gray-500); margin-top: 3px; }
+
+/* Recent orders */
+.orders-card { background: #fff; border-radius: var(--r-md); padding: 20px; box-shadow: var(--sh-card); }
+.orders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.order-item { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--gray-100); }
+.order-item:last-child { border-bottom: none; }
+.order-icon { width: 42px; height: 42px; border-radius: 11px; background: var(--mint); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }
+.order-info { flex: 1; min-width: 0; }
+.order-name { font-weight: 800; font-size: .86rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.order-date { font-size: .73rem; color: var(--gray-500); }
+.order-status { padding: 4px 11px; border-radius: 99px; font-size: .7rem; font-weight: 800; flex-shrink: 0; }
+.s-ok      { background: #E3FCF1; color: #0A7B4E; }
+.s-transit { background: #FFF4E0; color: #C07A10; }
+.s-proc    { background: var(--teal-light); color: var(--teal-deep); }
+
+/* Products preview */
+.products-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (min-width: 640px) { .products-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; } }
+.product-card { background: #fff; border-radius: var(--r-md); overflow: hidden; box-shadow: var(--sh-card); transition: transform .2s, box-shadow .2s; }
+.product-card:hover { transform: translateY(-3px); box-shadow: var(--sh-med); }
+.product-img  { height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; }
+.product-body-inner { padding: 10px 12px; }
+.product-cat  { font-size: .64rem; font-weight: 800; color: var(--sage); text-transform: uppercase; letter-spacing: .07em; }
+.product-name { font-size: .86rem; font-weight: 800; margin: 3px 0; line-height: 1.25; }
+.product-footer-inner { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.price { font-size: .95rem; font-weight: 800; color: var(--teal-deep); }
+.btn-add-sm { width: 30px; height: 30px; border-radius: 8px; border: none; background: var(--teal-deep); color: #fff; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.btn-add-sm:hover { background: var(--teal-mid); }
+
+/* Quick links card */
+.quick-card { background: #fff; border-radius: var(--r-md); padding: 20px; box-shadow: var(--sh-card); }
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.quick-item {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 16px 12px; border-radius: var(--r-md); border: 2px solid var(--gray-200);
+  cursor: pointer; transition: all .2s; text-decoration: none;
+}
+.quick-item:hover { border-color: var(--teal-mid); background: var(--mint); }
+.quick-item .qi { font-size: 1.6rem; }
+.quick-item span { font-size: .78rem; font-weight: 800; color: var(--gray-700); text-align: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Page heading -->
+<div style="margin-bottom:20px;">
+  <span class="section-chip">Panel de Usuario</span>
+  <h1 class="section-title">Bienvenido, {{ session.get('user') }} 👋</h1>
+  <p class="section-sub">Gestiona tus pedidos, favoritos y perfil desde aquí.</p>
 </div>
 
-<div class="top-bar">
-  <span class="hamburger" onclick="toggleMenu()">☰</span>
-  <div class="profile" onclick="toggleProfile()">
-    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png">
+<div class="dashboard">
+
+  <!-- ====== SIDEBAR ====== -->
+  <div class="sidebar">
+    <div class="user-strip">
+      <div class="avatar">{{ session.get('user', '?')[0].upper() }}</div>
+      <div>
+        <div class="user-name-text">{{ session.get('user') }}</div>
+        <div class="user-email">usuario@farmavida.co</div>
+        <span class="premium-tag">🏅 Cliente Premium</span>
+      </div>
+    </div>
+    <div class="sidebar-menu">
+      <a href="{{ url_for('menu_user') }}" class="menu-item active">📊 Dashboard</a>
+      <a href="{{ url_for('menu_produc') }}" class="menu-item">💊 Productos</a>
+      <a href="{{ url_for('productos_view') }}" class="menu-item">🔍 Buscar</a>
+      <a href="#pedidos" class="menu-item">📦 Pedidos</a>
+      <a href="#" class="menu-item">❤️ Favoritos</a>
+      <a href="#" class="menu-item">📋 Recetas</a>
+      <a href="{{ url_for('logout') }}" class="menu-item danger">🚪 Salir</a>
+    </div>
   </div>
-</div>
-<div class="menu-bar">
-  <a href="#">Productos</a>
-  <a href="#">Recetas</a>
-  <a href="#">Ofertas</a>
-  <a href="#">Contacto</a>
-  <a href="#">Ubicación</a>
-  <a href="#">Iniciar sesión</a>
-</div>
 
+  <!-- ====== MAIN ====== -->
+  <div class="dash-main">
 
-<div class="side-menu" id="sideMenu">
-  <h5>Menú Usuario</h5>
-  <a href="/Menu_Products">🛒 Productos</a>
-  <a href="#">📦 Mis pedidos</a>
-  <a href="#">❤️ Favoritos</a>
-  <a href="#">⚙️ Perfil</a>
-<a href="/logout">Cerrar sesión</a>
-</div>
+    <!-- Stats -->
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-icon" style="background:#E8F5FE;color:#1565C0;">📦</div>
+        <div><div class="stat-num">3</div><div class="stat-label">Pedidos activos</div></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background:var(--teal-light);color:var(--teal-deep);">❤️</div>
+        <div><div class="stat-num">5</div><div class="stat-label">Favoritos</div></div>
+      </div>
+      <div class="stat-card" style="grid-column: span 2;">
+        <div class="stat-icon" style="background:#FFF4E0;color:#C07A10;">💳</div>
+        <div><div class="stat-num">$27.000</div><div class="stat-label">Último pedido</div></div>
+      </div>
+    </div>
+    <!-- fix stat on ≥640 -->
+    <style>@media(min-width:640px){.stat-card:nth-child(3){grid-column:span 1;}}</style>
 
-<div class="profile-menu" id="profileMenu">
-  <a href="#">Mi cuenta</a>
-  <a href="/logout">Cerrar sesión</a>
-</div>
-
-<div id="carouselFarmacia" class="carousel slide" data-bs-ride="carousel">
-  <div class="carousel-inner">
-    <div class="carousel-item active">
-      <img src="https://images.unsplash.com/photo-1611695434398-4f4b330623e6" class="d-block w-100 carousel-img">
-      <div class="carousel-caption">
-        <h5>Tu farmacia de confianza</h5>
-        <p>Atención 24/7 para tu salud</p>
+    <!-- Accesos rápidos -->
+    <div class="quick-card">
+      <h3 style="font-size:1rem; color:var(--gray-900);">Accesos rápidos</h3>
+      <div class="quick-grid">
+        <a href="{{ url_for('menu_produc') }}" class="quick-item">
+          <span class="qi">💊</span><span>Ver productos</span>
+        </a>
+        <a href="{{ url_for('productos_view') }}" class="quick-item">
+          <span class="qi">🔍</span><span>Buscar</span>
+        </a>
+        <a href="#" class="quick-item" onclick="toggleCart(); return false;">
+          <span class="qi">🛒</span><span>Mi carrito</span>
+        </a>
+        <a href="#pedidos" class="quick-item">
+          <span class="qi">📦</span><span>Mis pedidos</span>
+        </a>
       </div>
     </div>
 
-    <div class="carousel-item">
-      <img src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae" class="d-block w-100 carousel-img">
-      <div class="carousel-caption">
-        <h5>Medicamentos certificados</h5>
-        <p>Solo productos originales</p>
+    <!-- Products section -->
+    <div class="orders-card">
+      <div class="orders-header">
+        <h3 style="font-size:1rem; color:var(--gray-900);">💊 Productos disponibles</h3>
+        <a href="{{ url_for('menu_produc') }}" class="btn btn-ghost btn-sm">Ver todos →</a>
+      </div>
+      <div class="products-grid">
+        {% for p in products %}
+        <div class="product-card">
+          <div class="product-img"
+            style="background:{% if p.category == 'Medicamento' %}linear-gradient(135deg,#E8F5E9,#C8E6C9){% elif p.category == 'Aseo personal' %}linear-gradient(135deg,#E3F2FD,#BBDEFB){% else %}linear-gradient(135deg,#FFF8E1,#FFE0B2){% endif %}">
+            {% if p.category == 'Medicamento' %}💊{% elif p.category == 'Aseo personal' %}🧴{% else %}📦{% endif %}
+          </div>
+          <div class="product-body-inner">
+            <div class="product-cat">{{ p.category }}</div>
+            <div class="product-name">{{ p.name }}</div>
+            <div class="product-footer-inner">
+              <span class="price">${{ '{:,}'.format(p.price).replace(',', '.') }}</span>
+              <button class="btn-add-sm" onclick="addToCart({{ p.id }}, '{{ p.name }}', {{ p.price }}, '{{ p.category }}')">+</button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="carousel-item">
-      <img src="https://images.unsplash.com/photo-1611695434398-4f4b330623e6" class="d-block w-100 carousel-img">
-      <div class="carousel-caption">
-        <h5>Ofertas cada semana</h5>
-        <p>Cuida tu bolsillo</p>
+    <!-- Recent orders -->
+    <div class="orders-card" id="pedidos">
+      <div class="orders-header">
+        <h3 style="font-size:1rem; color:var(--gray-900);">📦 Pedidos recientes</h3>
+      </div>
+      <div class="order-item">
+        <div class="order-icon">💊</div>
+        <div class="order-info"><div class="order-name">Acetaminofén + Shampoo</div><div class="order-date">15 feb 2026 · #4821</div></div>
+        <span class="order-status s-ok">✓ Entregado</span>
+      </div>
+      <div class="order-item">
+        <div class="order-icon">🧴</div>
+        <div class="order-info"><div class="order-name">Pack Aseo Personal</div><div class="order-date">22 feb 2026 · #4957</div></div>
+        <span class="order-status s-transit">⟳ En camino</span>
+      </div>
+      <div class="order-item">
+        <div class="order-icon">💊</div>
+        <div class="order-info"><div class="order-name">Dolex x3 unidades</div><div class="order-date">26 feb 2026 · #5012</div></div>
+        <span class="order-status s-proc">◌ Procesando</span>
       </div>
     </div>
-  </div>
 
-  <button class="carousel-control-prev" type="button" data-bs-target="#carouselFarmacia" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon"></span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#carouselFarmacia" data-bs-slide="next">
-    <span class="carousel-control-next-icon"></span>
-  </button>
-</div>
-
-<div class="container my-5">
-  <h2 class="text-center mb-4">Panel del Usuario</h2>
-  <div class="row g-4">
-<div class="col-md-4">
-  <a href="/Products" class="text-decoration-none">
-    <div class="card service-card p-4 text-center h-100">
-      <div style="font-size: 40px;">💊</div>
-      <h5 class="mt-2 text-dark">Ver productos</h5>
-      <p class="text-muted mb-0">Explora todos los medicamentos</p>
-    </div>
-  </a>
-</div>
-<div class="col-md-4">
-  <a href="#" class="text-decoration-none">
-    <div class="card service-card p-4 text-center h-100">
-      <div style="font-size: 40px;">📦</div>
-      <h5 class="mt-2 text-dark">Mis pedidos</h5>
-      <p class="text-muted mb-0">Explora todos tus pedidos</p>
-    </div>
-  </a>
-</div>
-<div class="col-md-4">
-  <a href="#" class="text-decoration-none">
-    <div class="card service-card p-4 text-center h-100">
-      <div style="font-size: 40px;">⚙️</div>
-      <h5 class="mt-2 text-dark">Mi perfil</h5>
-      <p class="text-muted mb-0">Configura tu Perfil</p>
-    </div>
-  </a>
-</div>
-
-
-
-
-<!-- BOTÓN CHAT -->
-<div class="chat-btn" onclick="toggleChat()"><h1>💬</h1></div>
-<footer>© 2026 Farmacia Online — Usuario</footer>
-<!-- CHAT -->
-<div class="chat-box" id="chatBox">
-  <div class="chat-header">Asistente Farmacia 🤖</div>
-  <div class="chat-body" id="chatBody">
-    <div class="msg-bot">¡Hola! ¿En qué puedo ayudarte? 😊</div>
-  </div>
-  <div class="chat-input">
-    <input type="text" id="chatInput" placeholder="Escribe tu mensaje...">
-    <button onclick="sendMessage()">Enviar</button>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-function toggleMenu(){document.getElementById("sideMenu").classList.toggle("active")}
-function toggleProfile(){
-  const m=document.getElementById("profileMenu");
-  m.style.display=m.style.display==="block"?"none":"block";
-}
-function toggleChat(){
-  const chat = document.getElementById("chatBox");
-  chat.style.display = chat.style.display === "flex" ? "none" : "flex";
-}
-
-function sendMessage() {
-  const input = document.getElementById("chatInput");
-  const msg = input.value.trim();
-  if(!msg) return;
-
-  const chatBody = document.getElementById("chatBody");
-
-  chatBody.innerHTML += `<div class="msg-user">${msg}</div>`;
-  input.value = "";
-
-  setTimeout(() => {
-    let response = "No entendí tu mensaje 😅";
-    if(msg.toLowerCase().includes("horario")) response = "Atendemos 24/7 ⏰";
-    if(msg.toLowerCase().includes("envío")) response = "Hacemos envíos a domicilio 🚚";
-    if(msg.toLowerCase().includes("medicamento")) response = "Puedes buscar medicamentos en la sección Productos 💊";
-
-    chatBody.innerHTML += `<div class="msg-bot">${response}</div>`;
-    chatBody.scrollTop = chatBody.scrollHeight;
-  }, 600);
-}
-
-window.onload=()=>{setTimeout(()=>{document.getElementById("loader").style.display="none"},800);}
-</script>
-<script>
-  if (window.history.replaceState) {
-    window.history.replaceState(null, null, window.location.href);
-  }
-</script>
-</body>
-</html>
+  </div><!-- /dash-main -->
+</div><!-- /dashboard -->
+{% endblock %}

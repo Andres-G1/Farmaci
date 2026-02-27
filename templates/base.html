@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}FarmaVida{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/farmavida.css') }}">
+{% block extra_styles %}{% endblock %}
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+  <div class="navbar-inner">
+    <!-- Logo -->
+    <a href="{{ url_for('index') }}" class="logo">
+      <div class="logo-icon">💊</div>
+      <div class="logo-text">Farma<em>Vida</em></div>
+    </a>
+
+    <!-- Desktop links -->
+    <div class="nav-links">
+      {% if session.get('user') %}
+        {% if session.get('role') == 'Admin' %}
+          <a href="{{ url_for('menu_admin') }}" class="nav-link {% if request.endpoint == 'menu_admin' %}active{% endif %}">🛡️ Panel Admin</a>
+          <a href="{{ url_for('menu_produc') }}" class="nav-link {% if request.endpoint == 'menu_produc' %}active{% endif %}">💊 Productos</a>
+        {% else %}
+          <a href="{{ url_for('menu_user') }}" class="nav-link {% if request.endpoint == 'menu_user' %}active{% endif %}">🏠 Inicio</a>
+          <a href="{{ url_for('menu_produc') }}" class="nav-link {% if request.endpoint == 'menu_produc' %}active{% endif %}">💊 Productos</a>
+          <a href="#ofertas" class="nav-link">🔥 Ofertas</a>
+          <a href="#contacto" class="nav-link">📞 Contacto</a>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Inicio</a>
+        <a href="#" class="nav-link">Productos</a>
+        <a href="#" class="nav-link">Ofertas</a>
+        <a href="#" class="nav-link">Contacto</a>
+      {% endif %}
+    </div>
+
+    <!-- Desktop actions -->
+    <div class="nav-actions">
+      {% if session.get('user') %}
+        {% if session.get('role') == 'User' %}
+        <button class="cart-btn" onclick="toggleCart()" id="cartBtn">
+          🛒 <span class="cart-badge" id="cartCount">0</span>
+        </button>
+        {% endif %}
+        <div class="user-pill">
+          <div class="user-dot">{{ session.get('user', '?')[0].upper() }}</div>
+          {{ session.get('user') }}
+          {% if session.get('role') == 'Admin' %}<span class="admin-badge">Admin</span>{% endif %}
+        </div>
+        <a href="{{ url_for('logout') }}" class="btn btn-ghost btn-sm">Salir</a>
+      {% else %}
+        <a href="{{ url_for('login') }}" class="btn btn-ghost btn-sm">Iniciar sesión</a>
+        <a href="{{ url_for('login') }}#register" class="btn btn-primary btn-sm">Registrarse</a>
+      {% endif %}
+    </div>
+
+    <!-- Mobile right -->
+    <div class="nav-mobile-right">
+      {% if session.get('user') and session.get('role') == 'User' %}
+      <button class="cart-btn" onclick="toggleCart()" style="display:flex;">
+        🛒 <span class="cart-badge" id="cartCountMobile">0</span>
+      </button>
+      {% endif %}
+      <button class="ham-btn" onclick="toggleDrawer()" id="hamBtn" aria-label="Menú">
+        <div class="ham-line" id="hl1"></div>
+        <div class="ham-line" id="hl2"></div>
+        <div class="ham-line" id="hl3"></div>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile drawer -->
+<div class="mobile-drawer" id="mobileDrawer">
+  {% if session.get('user') %}
+    <div style="display:flex; align-items:center; gap:10px; padding:8px 14px 12px;">
+      <div class="user-dot" style="width:36px;height:36px;font-size:1rem;">{{ session.get('user', '?')[0].upper() }}</div>
+      <div>
+        <div style="font-weight:800; font-size:.9rem;">{{ session.get('user') }}</div>
+        <div style="font-size:.76rem; color:var(--gray-500);">{{ session.get('role') }}</div>
+      </div>
+    </div>
+    <div class="drawer-divider"></div>
+    {% if session.get('role') == 'Admin' %}
+      <a href="{{ url_for('menu_admin') }}" class="mobile-nav-link">🛡️ Panel Admin</a>
+      <a href="{{ url_for('menu_produc') }}" class="mobile-nav-link">💊 Gestionar Productos</a>
+    {% else %}
+      <a href="{{ url_for('menu_user') }}" class="mobile-nav-link">🏠 Inicio</a>
+      <a href="{{ url_for('menu_produc') }}" class="mobile-nav-link">💊 Productos</a>
+      <a href="#ofertas" class="mobile-nav-link" onclick="closeDrawer()">🔥 Ofertas</a>
+      <a href="#contacto" class="mobile-nav-link" onclick="closeDrawer()">📞 Contacto</a>
+    {% endif %}
+    <div class="drawer-divider"></div>
+    <a href="{{ url_for('logout') }}" class="mobile-nav-link" style="color:var(--coral);">🚪 Cerrar sesión</a>
+  {% else %}
+    <a href="{{ url_for('index') }}" class="mobile-nav-link">🏠 Inicio</a>
+    <a href="#" class="mobile-nav-link">💊 Productos</a>
+    <div class="drawer-footer">
+      <a href="{{ url_for('login') }}" class="btn btn-ghost btn-block">Iniciar sesión</a>
+      <a href="{{ url_for('login') }}#register" class="btn btn-primary btn-block">Registrarse</a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ===== PAGE CONTENT ===== -->
+<main class="page-wrap">
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<!-- ===== CART DRAWER ===== -->
+{% if session.get('user') and session.get('role') == 'User' %}
+<div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+<div class="cart-drawer" id="cartDrawer">
+  <div class="cart-header">
+    <h3>🛒 Mi Carrito</h3>
+    <button class="cart-close" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <div class="cart-empty">
+      <div class="icon">🛒</div>
+      <p style="font-weight:700; color:var(--gray-700); margin-bottom:4px;">Tu carrito está vacío</p>
+      <p style="font-size:.82rem;">Agrega productos para comenzar</p>
+    </div>
+  </div>
+  <div class="cart-footer">
+    <div class="cart-total-row">
+      <span class="cart-total-label">Total:</span>
+      <span class="cart-total-val" id="cartTotal">$0</span>
+    </div>
+    <button class="btn btn-primary btn-block" onclick="checkout()">Finalizar compra →</button>
+  </div>
+</div>
+{% endif %}
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo-text">Farma<em>Vida</em></div>
+        <p class="footer-desc">Farmacia certificada con productos originales y atención farmacéutica desde 2005.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Productos</h4>
+          <ul>
+            <li><a href="#">Medicamentos</a></li>
+            <li><a href="#">Vitaminas</a></li>
+            <li><a href="#">Dermocosméticos</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Servicios</h4>
+          <ul>
+            <li><a href="#">Domicilio express</a></li>
+            <li><a href="#">Recetas digitales</a></li>
+            <li><a href="#">Asesoría 24/7</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Legal</h4>
+          <ul>
+            <li><a href="#">Términos</a></li>
+            <li><a href="#">Privacidad</a></li>
+            <li><a href="#">Devoluciones</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 FarmaVida S.A.S · INVIMA Reg. 2021FT-XY1234 · Bogotá, Colombia</span>
+      <span>Diseñado con ❤️ para tu bienestar</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* =====================================================
+   NAV
+===================================================== */
+let drawerOpen = false;
+function toggleDrawer() {
+  drawerOpen = !drawerOpen;
+  document.getElementById('mobileDrawer').classList.toggle('open', drawerOpen);
+  const [l1,l2,l3] = [document.getElementById('hl1'),document.getElementById('hl2'),document.getElementById('hl3')];
+  if (drawerOpen) {
+    l1.style.cssText = 'transform:rotate(45deg) translate(4px,4px)';
+    l2.style.cssText = 'opacity:0';
+    l3.style.cssText = 'transform:rotate(-45deg) translate(4px,-4px)';
+  } else {
+    l1.style.cssText = l2.style.cssText = l3.style.cssText = '';
+  }
+}
+function closeDrawer() { drawerOpen=false; document.getElementById('mobileDrawer').classList.remove('open'); }
+document.addEventListener('click', e => {
+  if (drawerOpen && !e.target.closest('.mobile-drawer') && !e.target.closest('.ham-btn')) closeDrawer();
+});
+
+/* =====================================================
+   CART
+===================================================== */
+let cart = JSON.parse(localStorage.getItem('fv_cart') || '[]');
+
+function saveCart() { localStorage.setItem('fv_cart', JSON.stringify(cart)); }
+
+function updateCartCount() {
+  const total = cart.reduce((s, i) => s + i.qty, 0);
+  document.querySelectorAll('#cartCount, #cartCountMobile').forEach(el => { if(el) el.textContent = total; });
+}
+
+function updateCartTotal() {
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const el = document.getElementById('cartTotal');
+  if (el) el.textContent = '$' + total.toLocaleString('es-CO');
+}
+
+function getCategoryEmoji(cat) {
+  const map = { 'Medicamento': '💊', 'Aseo personal': '🧴', 'Vitaminas': '🍊', 'Dispositivos': '🩺' };
+  return map[cat] || '📦';
+}
+
+function getCategoryBg(cat) {
+  const map = { 'Medicamento': 'linear-gradient(135deg,#E8F5E9,#C8E6C9)', 'Aseo personal': 'linear-gradient(135deg,#E3F2FD,#BBDEFB)', 'Vitaminas': 'linear-gradient(135deg,#FFF8E1,#FFE0B2)', 'Dispositivos': 'linear-gradient(135deg,#F3E5F5,#E1BEE7)' };
+  return map[cat] || 'linear-gradient(135deg,var(--gray-100),var(--gray-200))';
+}
+
+function renderCart() {
+  const container = document.getElementById('cartItems');
+  if (!container) return;
+  if (cart.length === 0) {
+    container.innerHTML = `<div class="cart-empty"><div class="icon">🛒</div><p style="font-weight:700;color:var(--gray-700);margin-bottom:4px;">Tu carrito está vacío</p><p style="font-size:.82rem;">Agrega productos para comenzar</p></div>`;
+    return;
+  }
+  container.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-item-icon" style="background:${getCategoryBg(item.category)}">${getCategoryEmoji(item.category)}</div>
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-cat">${item.category}</div>
+        <div class="cart-item-qty">
+          <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
+          <span class="qty-num">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+          <button class="cart-remove" onclick="removeFromCart(${item.id})" title="Eliminar">🗑️</button>
+        </div>
+      </div>
+      <div class="cart-item-price">$${(item.price * item.qty).toLocaleString('es-CO')}</div>
+    </div>
+  `).join('');
+  updateCartTotal();
+}
+
+function addToCart(id, name, price, category) {
+  const existing = cart.find(i => i.id === id);
+  if (existing) {
+    existing.qty++;
+  } else {
+    cart.push({ id, name, price, category, qty: 1 });
+  }
+  saveCart(); updateCartCount(); renderCart();
+  showToast(`✅ ${name} agregado al carrito`, 'success');
+}
+
+function changeQty(id, delta) {
+  const item = cart.find(i => i.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  saveCart(); updateCartCount(); renderCart();
+}
+
+function removeFromCart(id) {
+  const item = cart.find(i => i.id === id);
+  if (item) showToast(`🗑️ ${item.name} eliminado`, 'warning');
+  cart = cart.filter(i => i.id !== id);
+  saveCart(); updateCartCount(); renderCart();
+}
+
+function toggleCart() {
+  document.getElementById('cartOverlay')?.classList.toggle('open');
+  document.getElementById('cartDrawer')?.classList.toggle('open');
+}
+
+function checkout() {
+  if (cart.length === 0) { showToast('Tu carrito está vacío', 'error'); return; }
+  const total = cart.reduce((s,i)=>s+i.price*i.qty, 0);
+  showToast(`🎉 ¡Compra procesada! Total: $${total.toLocaleString('es-CO')}`, 'success');
+  cart = []; saveCart(); updateCartCount(); renderCart();
+  toggleCart();
+}
+
+/* =====================================================
+   TOAST
+===================================================== */
+function showToast(msg, type='success') {
+  const tc = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = msg;
+  tc.appendChild(t);
+  setTimeout(() => { t.classList.add('hiding'); setTimeout(() => t.remove(), 300); }, 2800);
+}
+
+/* =====================================================
+   INIT
+===================================================== */
+document.addEventListener('DOMContentLoaded', () => {
+  updateCartCount();
+  renderCart();
+});
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

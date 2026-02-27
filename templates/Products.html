@@ -1,78 +1,183 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Farmacia | Productos</title>
-<meta http-equiv="Cache-Control" content="no-store" />
-<meta http-equiv="Pragma" content="no-cache" />
-<meta http-equiv="Expires" content="0" />
+{% extends "base.html" %}
+{% block title %}Productos — FarmaVida{% endblock %}
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">  
-<link rel="stylesheet" href="{{ url_for('static', filename='products.css') }}">
-</head>
+{% block extra_styles %}
+<style>
+/* Filter sidebar */
+.products-layout { display: flex; flex-direction: column; gap: 20px; }
+@media (min-width: 900px) { .products-layout { flex-direction: row; align-items: flex-start; } }
 
-<body>
+.filters-card { background: #fff; border-radius: var(--r-lg); padding: 20px; box-shadow: var(--sh-card); flex-shrink: 0; }
+@media (min-width: 900px) { .filters-card { width: 240px; position: sticky; top: 90px; } }
 
-<!-- LOADER -->
-<div id="loader">
-  <div class="spinner-border text-danger"></div>
-  <div class="loader-bar"><span></span></div>
-  <p class="mt-2">Cargando productos...</p>
-</div>
+.filter-title { font-size: .78rem; font-weight: 800; color: var(--gray-500); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 10px; }
+.filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+@media (min-width: 900px) { .filter-chips { flex-direction: column; } }
+.filter-chip {
+  padding: 8px 14px; border-radius: var(--r-sm); border: 2px solid var(--gray-200);
+  background: #fff; font-size: .82rem; font-weight: 700; color: var(--gray-500);
+  cursor: pointer; white-space: nowrap; transition: all .2s; width: fit-content;
+}
+@media (min-width: 900px) { .filter-chip { width: 100%; } }
+.filter-chip:hover  { border-color: var(--teal-mid); color: var(--teal-deep); }
+.filter-chip.active { border-color: var(--teal-deep); background: var(--teal-light); color: var(--teal-deep); }
 
-<!-- HEADER -->
-<div class="top-bar">
-  <span class="back-btn" onclick="history.back()">←</span>
-  <strong>Productos disponibles</strong>
-      <input type="text" id="search" class="search-bar" placeholder="🔎 Buscar productos...">
-</div>
+.price-range { margin-top: 8px; }
+.price-input-row { display: flex; gap: 8px; align-items: center; }
+.price-input-row .form-input { font-size: .82rem; padding: 9px 10px; }
+.price-input-row span { font-size: .8rem; color: var(--gray-500); font-weight: 700; flex-shrink: 0; }
 
-<!-- CONTENIDO -->
-<div class="container pb-5 mt-5">
-  <div class="row g-4">
+/* Products area */
+.products-area { flex: 1; min-width: 0; }
+.products-toolbar {
+  display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  background: #fff; border-radius: var(--r-md); padding: 14px 16px;
+  box-shadow: var(--sh-card); margin-bottom: 16px;
+}
+.search-wrap { flex: 1; min-width: 160px; position: relative; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: .95rem; pointer-events: none; }
+.search-wrap .form-input { padding-left: 36px; font-size: .88rem; }
 
-    {% for producto in products %}
-    <div class="col-12 col-sm-6 col-md-3">
-      <div class="card shadow-sm h-100 product-card">
+/* Results info */
+.results-info { font-size: .82rem; color: var(--gray-500); font-weight: 600; }
+.results-info strong { color: var(--teal-deep); }
 
-        <img src="{{ url_for('static', filename=producto.image) }}"
-             class="card-img-top product-img"
-             alt="{{ producto.name }}">
+/* Grid */
+.prod-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (min-width: 640px)  { .prod-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; } }
+@media (min-width: 1024px) { .prod-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; } }
 
-        <div class="card-body text-center">
-          <h6 class="card-title">{{ producto.name }}</h6>
-          <p class="card-text fw-bold text-danger mb-2">
-            {{ producto.price }} COP
-          </p>
+.product-card { background: #fff; border-radius: var(--r-md); overflow: hidden; box-shadow: var(--sh-card); transition: transform .2s, box-shadow .2s; }
+.product-card:hover { transform: translateY(-4px); box-shadow: var(--sh-med); }
+.product-img { height: 110px; display: flex; align-items: center; justify-content: center; font-size: 2.6rem; position: relative; }
+@media (min-width: 640px) { .product-img { height: 140px; } }
+.product-body { padding: 12px; }
+.product-cat  { font-size: .64rem; font-weight: 800; color: var(--sage); text-transform: uppercase; letter-spacing: .07em; }
+.product-name { font-size: .88rem; font-weight: 800; color: var(--gray-900); margin: 3px 0; line-height: 1.3; }
+.product-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.price { font-size: 1rem; font-weight: 800; color: var(--teal-deep); }
+.btn-add { width: 32px; height: 32px; border-radius: 9px; border: none; background: var(--teal-deep); color: #fff; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background .2s; }
+.btn-add:hover { background: var(--teal-mid); }
 
-          <button class="btn btn-danger w-100">
-            ➕ Agregar al carrito
-          </button>
-        </div>
+/* Empty state */
+.empty-state { text-align: center; padding: 48px 24px; background: #fff; border-radius: var(--r-lg); box-shadow: var(--sh-card); }
+.empty-icon { font-size: 3.5rem; margin-bottom: 14px; }
+.empty-state h3 { font-size: 1.05rem; color: var(--gray-700); margin-bottom: 6px; }
+.empty-state p  { font-size: .86rem; color: var(--gray-500); margin-bottom: 20px; }
+</style>
+{% endblock %}
 
-      </div>
-    </div>
+{% block content %}
+
+<!-- Header -->
+<div style="margin-bottom:20px;">
+  <span class="section-chip">Catálogo</span>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <h1 class="section-title">💊 Productos</h1>
+    {% if session.get('role') == 'Admin' %}
+    <a href="{{ url_for('menu_admin') }}" class="btn btn-gold btn-sm">🛡️ Panel Admin</a>
     {% else %}
-      <p>No hay productos disponibles.</p>
-    {% endfor %}
-
+    <button class="btn btn-primary btn-sm" onclick="toggleCart()">🛒 Ver carrito</button>
+    {% endif %}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<div class="products-layout">
 
-<script>
-window.onload = () => {
-  setTimeout(() => {
-    document.getElementById("loader").style.display = "none";
-  }, 700);
-};
-</script>
-<script>
-  if (window.history.replaceState) {
-    window.history.replaceState(null, null, window.location.href);
-  }
-</script>
-</body>
-</html>
+  <!-- ====== FILTERS ====== -->
+  <div class="filters-card">
+    <form method="GET" action="{{ url_for('productos_view') }}" id="filterForm">
+      <div style="margin-bottom:16px;">
+        <div class="filter-title">Categoría</div>
+        <div class="filter-chips">
+          <a href="{{ url_for('productos_view') }}" class="filter-chip {% if not category_selected %}active{% endif %}">Todas</a>
+          {% for cat in categories %}
+          <a href="{{ url_for('productos_view') }}?category={{ cat }}{% if query %}&q={{ query }}{% endif %}"
+             class="filter-chip {% if category_selected == cat %}active{% endif %}">
+            {% if cat == 'Medicamento' %}💊{% elif cat == 'Aseo personal' %}🧴{% elif cat == 'Vitaminas' %}🍊{% else %}📦{% endif %} {{ cat }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:2px solid var(--gray-100);margin:16px 0;">
+
+      <div class="filter-title">Rango de precio</div>
+      <div class="price-range">
+        <div class="price-input-row" style="margin-bottom:8px;">
+          <span>Mín</span>
+          <input class="form-input" type="number" name="price_min" value="{{ price_min if price_min else 0 }}" min="0" placeholder="0">
+        </div>
+        <div class="price-input-row">
+          <span>Máx</span>
+          <input class="form-input" type="number" name="price_max" value="{{ price_max if price_max else 100000 }}" min="0" placeholder="100000">
+        </div>
+        <input type="hidden" name="q" value="{{ query }}">
+        <input type="hidden" name="category" value="{{ category_selected }}">
+        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:12px;padding:10px;">Aplicar filtros</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ====== PRODUCTS AREA ====== -->
+  <div class="products-area">
+
+    <!-- Toolbar -->
+    <div class="products-toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <form method="GET" action="{{ url_for('productos_view') }}" style="display:contents;">
+          <input class="form-input" type="text" name="q" value="{{ query }}" placeholder="Buscar por nombre…"
+                 oninput="this.form.submit()">
+          {% if category_selected %}<input type="hidden" name="category" value="{{ category_selected }}">{% endif %}
+          {% if price_min %}<input type="hidden" name="price_min" value="{{ price_min }}">{% endif %}
+          {% if price_max %}<input type="hidden" name="price_max" value="{{ price_max }}">{% endif %}
+        </form>
+      </div>
+      <div class="results-info">
+        <strong>{{ products|length }}</strong> resultado{{ 's' if products|length != 1 else '' }}
+        {% if query %} para "<em>{{ query }}</em>"{% endif %}
+        {% if category_selected %} en <strong>{{ category_selected }}</strong>{% endif %}
+      </div>
+      {% if query or category_selected %}
+      <a href="{{ url_for('productos_view') }}" class="btn btn-ghost btn-sm">✕ Limpiar</a>
+      {% endif %}
+    </div>
+
+    <!-- Products grid -->
+    {% if products %}
+    <div class="prod-grid">
+      {% for p in products %}
+      <div class="product-card">
+        <div class="product-img"
+          style="background:{% if p.category == 'Medicamento' %}linear-gradient(135deg,#E8F5E9,#C8E6C9){% elif p.category == 'Aseo personal' %}linear-gradient(135deg,#E3F2FD,#BBDEFB){% elif p.category == 'Vitaminas' %}linear-gradient(135deg,#FFF8E1,#FFE0B2){% else %}linear-gradient(135deg,#F3E5F5,#E1BEE7){% endif %}">
+          {% if p.category == 'Medicamento' %}💊{% elif p.category == 'Aseo personal' %}🧴{% elif p.category == 'Vitaminas' %}🍊{% elif p.category == 'Dispositivos' %}🩺{% else %}📦{% endif %}
+        </div>
+        <div class="product-body">
+          <div class="product-cat">{{ p.category }}</div>
+          <div class="product-name">{{ p.name }}</div>
+          <div class="product-price-row">
+            <span class="price">${{ '{:,}'.format(p.price).replace(',', '.') }}</span>
+            {% if session.get('role') == 'User' %}
+            <button class="btn-add" onclick="addToCart({{ p.id }}, '{{ p.name }}', {{ p.price }}, '{{ p.category }}')" title="Agregar al carrito">+</button>
+            {% elif session.get('role') == 'Admin' %}
+            <span class="tag tag-teal" style="font-size:.68rem;">Stock ✓</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>No se encontraron productos</h3>
+      <p>Intenta con otro término o ajusta los filtros de búsqueda.</p>
+      <a href="{{ url_for('productos_view') }}" class="btn btn-primary">Ver todos los productos</a>
+    </div>
+    {% endif %}
+
+  </div><!-- /products-area -->
+</div><!-- /products-layout -->
+{% endblock %}
